@@ -1,7 +1,7 @@
 import unittest
 from rdflib import Namespace
-from src.rdf_mapper import RDFMapper
-from src.rdf_repository import RDFRepository
+from rdf_mapper.rdf_mapper import RDFMapper
+from rdf_mapper.rdf_repository import RDFRepository
 from rdflib import Graph
 
 EX = Namespace("http://example.org/")
@@ -83,6 +83,27 @@ class TestRDFRepository(unittest.TestCase):
         self.assertEqual(person_from_graph.address.street, "123 Main St")
         self.assertEqual(len(person_from_graph.phones), 2)
         self.assertIn("1234-5678", [p.number for p in person_from_graph.phones])
+
+    def test_performance_many_records(self):
+        for i in range(1000):
+            uri = f"http://example.org/person/bulk{i}"
+            person = Person(uri, f"Pessoa {i}")
+            self.graph += rdf_mapper.to_rdf(person)
+        bulk_repo = RDFRepository(rdf_mapper, self.graph, Person)
+        results = bulk_repo.find_by_name_like(name="Pessoa")
+        self.assertGreaterEqual(len(results), 1000)
+
+    def test_circular_reference(self):
+        a1 = Address("http://example.org/address/circular")
+        p1 = Person("http://example.org/person/circular1", "Cíclico")
+        p2 = Person("http://example.org/person/circular2", "Cíclico também", address=a1)
+        p1._address = a1
+        p2._phones = [Phone("http://example.org/phone/loop", "0000-0000")]
+        self.graph += rdf_mapper.to_rdf(p1)
+        self.graph += rdf_mapper.to_rdf(p2)
+        circular_repo = RDFRepository(rdf_mapper, self.graph, Person)
+        result = circular_repo.find_by_name(name="Cíclico")
+        self.assertEqual(result[0].name, "Cíclico")
 
 if __name__ == "__main__":
     unittest.main()
