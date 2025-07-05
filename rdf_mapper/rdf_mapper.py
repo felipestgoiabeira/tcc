@@ -174,3 +174,10 @@ class RDFMapper:
                     setattr(instance, attr, self._literal_to_python(val))
 
         return instance
+    
+    def to_rdf_many(self, objs: list) -> Graph:
+        graph = Graph()
+        visited = set()
+        for obj in objs:
+            graph += self.to_rdf(obj, visited=visited)
+        return graph
