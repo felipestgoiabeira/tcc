@@ -1,6 +1,7 @@
 from rdflib import Namespace
 from rdf_mapper.rdf_mapper import RDFMapper
-# Inicializa o mapper
+
+
 rdf_mapper = RDFMapper()
 EX = Namespace("http://example.org/")
 
