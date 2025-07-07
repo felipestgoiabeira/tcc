@@ -1,5 +1,5 @@
 import re
-from rdflib import Namespace, Literal
+
 class RDFRepository:
     def __init__(self, rdf_mapper, graph, entity_class):
         self.mapper = rdf_mapper
@@ -94,3 +94,29 @@ class RDFRepository:
             return int(row[0].toPython())
         return 0
 
+    
+    def group_by_count(self, cls, field: str, order: str = "DESC"):
+            graph = self.graph
+            class_uri = cls._rdf_type_uri
+
+            prop = getattr(cls, field, None)
+            if not hasattr(prop, 'fget') or not hasattr(prop.fget, '_rdf_predicate'):
+                raise ValueError(f"'{field}' is not a valid rdf_property")
+
+            predicate = prop.fget._rdf_predicate
+            order = order.strip().upper()
+            if order not in ("ASC", "DESC"):
+                raise ValueError("order must be 'ASC' or 'DESC'")
+
+            query = f"""
+                SELECT ?{field} (COUNT(?s) AS ?count)
+                WHERE {{
+                ?s a <{class_uri}> ;
+                    <{predicate}> ?{field} .
+                }}
+                GROUP BY ?{field}
+                ORDER BY {order}(?count)
+            """
+
+            qres = graph.query(query)
+            return [{field: str(row[0]), "count": int(row[1])} for row in qres]
