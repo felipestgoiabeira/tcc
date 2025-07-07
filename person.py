@@ -1,5 +1,5 @@
 from rdflib import Namespace
-from src.rdf_mapper import RDFMapper
+from rdf_mapper.rdf_mapper import RDFMapper
 # Inicializa o mapper
 rdf_mapper = RDFMapper()
 EX = Namespace("http://example.org/")
@@ -53,7 +53,7 @@ person = Person("http://example.org/person/1", "João", addr, phones)
 
 # Serializa para RDF
 g = rdf_mapper.to_rdf(person)
-print(g.serialize(format="turtle"))
+print(g.serialize(format="xml"))
 
 # Desserializa do RDF
 p2 = rdf_mapper.from_rdf(g, Person, "http://example.org/person/1")
