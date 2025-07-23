@@ -120,3 +120,4 @@ class RDFRepository:
 
             qres = graph.query(query)
             return [{field: str(row[0]), "count": int(row[1])} for row in qres]
+    
